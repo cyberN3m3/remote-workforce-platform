@@ -4,9 +4,6 @@
 
 > Enterprise-grade remote access dashboard with React + TypeScript and AWS infrastructure managed via Terraform
 
-[![Live Demo](https://img.shields.io/badge/demo-live-success)](https://remote-workforce-platform.vercel.app)
-[![GitHub](https://img.shields.io/badge/github-repo-blue)](https://github.com/cyberN3m3/remote-workforce-platform)
-
 ---
 
 ##  Project Overview
@@ -19,7 +16,7 @@ A production-ready remote workforce management platform featuring:
 - 💰 **Cost-Optimized**: Designed for $1.30/month AWS deployment
 - 🚀 **CI/CD Pipeline**: Automated builds and deployments
 
-**Live Demo:** [remote-workforce-platform.vercel.app](https://remote-workforce-platform.vercel.app)
+**Live Demo:** [remote-workforce-platform.vercel.app](https://remote-workforce-platform-gusstrnid.vercel.app/)
 
 ---
 
