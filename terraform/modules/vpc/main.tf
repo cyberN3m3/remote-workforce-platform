@@ -18,7 +18,28 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Public Subnets (for ALB and Bastion)
+# --- NAT GATEWAY RESOURCES ---
+
+# Elastic IP for NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+  tags   = { Name = "${var.project_name}-${var.environment}-nat-eip" }
+}
+
+# NAT Gateway (Placed in the first public subnet)
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = { Name = "${var.project_name}-${var.environment}-nat-gw" }
+
+  # Explicitly wait for IGW to be ready
+  depends_on = [aws_internet_gateway.main]
+}
+
+# --- SUBNETS ---
+
+# Public Subnets
 resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.main.id
@@ -32,7 +53,7 @@ resource "aws_subnet" "public" {
   }
 }
 
-# Private Subnets (for application servers)
+# Private Subnets
 resource "aws_subnet" "private" {
   count             = 2
   vpc_id            = aws_vpc.main.id
@@ -45,7 +66,7 @@ resource "aws_subnet" "private" {
   }
 }
 
-# Database Subnets (for RDS)
+# Database Subnets
 resource "aws_subnet" "database" {
   count             = 2
   vpc_id            = aws_vpc.main.id
@@ -58,7 +79,9 @@ resource "aws_subnet" "database" {
   }
 }
 
-# Route Table for Public Subnets
+# --- ROUTING ---
+
+# Route Table for Public Subnets (IGW)
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   
@@ -72,12 +95,35 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Route Table Associations
+# Route Table Association for Public Subnets
 resource "aws_route_table_association" "public" {
   count          = 2
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
+
+# Route Table for Private Subnets (NAT Gateway)
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-private-rt"
+  }
+}
+
+# Route Table Association for Private Subnets
+resource "aws_route_table_association" "private" {
+  count          = 2
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private.id
+}
+
+# --- SECURITY GROUPS ---
 
 # Security Group for Public Resources (ALB)
 resource "aws_security_group" "public" {
@@ -98,7 +144,7 @@ resource "aws_security_group" "public" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP from internet (redirect to HTTPS)"
+    description = "HTTP from internet"
   }
   
   egress {
@@ -106,7 +152,7 @@ resource "aws_security_group" "public" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound"
+
   }
   
   tags = {
@@ -121,11 +167,19 @@ resource "aws_security_group" "private" {
   vpc_id      = aws_vpc.main.id
   
   ingress {
-    from_port       = 0
-    to_port         = 65535
+    from_port       = 3000
+    to_port         = 3000
     protocol        = "tcp"
     security_groups = [aws_security_group.public.id]
-    description     = "Allow traffic from ALB"
+    description     = "Allow app traffic from ALB"
+  }
+
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    cidr_blocks     = [var.vpc_cidr] # Allow SSH from within VPC
+    description     = "Allow SSH from Bastion"
   }
   
   egress {
@@ -133,7 +187,7 @@ resource "aws_security_group" "private" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound"
+
   }
   
   tags = {
@@ -152,7 +206,7 @@ resource "aws_security_group" "database" {
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.private.id]
-    description     = "PostgreSQL from private instances only"
+    description     = "PostgreSQL from private instances"
   }
   
   egress {

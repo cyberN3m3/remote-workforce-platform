@@ -1,19 +1,34 @@
 #!/bin/bash
+# Exit on any error
 set -e
 
-# Update system
+# 1. ADD SWAP FILE (Essential for t3.micro to prevent memory crashes during npm install)
+if [ ! -f /swapfile ]; then
+    fallocate -l 2G /swapfile
+    chmod 600 /swapfile
+    mkswap /swapfile
+    swapon /swapfile
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+# 2. Update system
 apt-get update
 apt-get upgrade -y
 
-# Install Node.js 18
+# 3. Install Node.js 18
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-apt-get install -y nodejs
+apt-get install -y nodejs wget
 
-# Create application directory
+# 4. Install CloudWatch Agent (Ubuntu fix: Download .deb directly)
+wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+dpkg -i -E ./amazon-cloudwatch-agent.deb
+rm amazon-cloudwatch-agent.deb
+
+# 5. Create application directory
 mkdir -p /opt/dashboard
 cd /opt/dashboard
 
-# Create package.json
+# 6. Create package.json
 cat > package.json << 'PACKAGE'
 {
   "name": "remote-workforce-dashboard",
@@ -29,7 +44,7 @@ cat > package.json << 'PACKAGE'
 }
 PACKAGE
 
-# Create environment file
+# 7. Create environment file
 cat > .env << ENV
 DB_HOST=${db_endpoint}
 DB_NAME=${db_name}
@@ -38,55 +53,67 @@ COGNITO_CLIENT_ID=${cognito_client_id}
 AWS_REGION=${region}
 ENV
 
-# Create server with CORS - using printf to avoid quote issues
-printf '%s\n' \
-"const express = require('express');" \
-"const cors = require('cors');" \
-"require('dotenv').config();" \
-"" \
-"const app = express();" \
-"const port = 3000;" \
-"" \
-"const corsOptions = {" \
-"  origin: function(origin, callback) {" \
-"    const allowedOrigins = [" \
-"      'http://localhost:3000'," \
-"      'http://localhost:5173'," \
-"      'http://localhost:5174'" \
-"    ];" \
-"    if (!origin || allowedOrigins.indexOf(origin) !== -1 || /vercel\.app$/.test(origin) || /netlify\.app$/.test(origin)) {" \
-"      callback(null, true);" \
-"    } else {" \
-"      callback(null, true);" \
-"    }" \
-"  }," \
-"  credentials: true" \
-"};" \
-"" \
-"app.use(cors(corsOptions));" \
-"app.use(express.json());" \
-"" \
-"app.get('/health', (req, res) => {" \
-"  res.json({ status: 'healthy', timestamp: new Date().toISOString() });" \
-"});" \
-"" \
-"app.get('/api/status', (req, res) => {" \
-"  res.json({ status: 'online', database: process.env.DB_HOST });" \
-"});" \
-"" \
-"app.get('/api/test', (req, res) => {" \
-"  res.json({ message: 'Backend connection successful', cors: 'enabled' });" \
-"});" \
-"" \
-"app.listen(port, '0.0.0.0', () => {" \
-"  console.log('Dashboard running on port ' + port);" \
-"});" \
-> server.js
+# 8. Create server.js (Includes root route and health check)
+cat > server.js << 'SERVER'
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
 
-# Install dependencies
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// Root route - No more "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('<h1>Remote Workforce Platform</h1><p>Infrastructure is successfully deployed and connected!</p>');
+});
+
+// Health check for ALB
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    instanceId: 'remote-workforce-dashboard'
+  });
+});
+
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'online', database: process.env.DB_HOST });
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Dashboard running on port ${port}`);
+});
+SERVER
+
+# 9. Install dependencies
 npm install
 
-# Create systemd service
+# 10. Configure CloudWatch Agent
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CW'
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/syslog",
+            "log_group_name": "/aws/remote-workforce/prod/application",
+            "log_stream_name": "{instance_id}"
+          }
+        ]
+      }
+    }
+  }
+}
+CW
+
+# Start the agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+# 11. Create systemd service
 cat > /etc/systemd/system/dashboard.service << 'SERVICE'
 [Unit]
 Description=Remote Workforce Dashboard
@@ -103,7 +130,7 @@ Restart=always
 WantedBy=multi-user.target
 SERVICE
 
-# Start service
+# 12. Start service
 systemctl daemon-reload
 systemctl enable dashboard
 systemctl start dashboard
