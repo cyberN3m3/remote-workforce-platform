@@ -1,152 +1,167 @@
-# í´ Zero-Trust Remote Workforce Platform
 
-> Enterprise-grade remote access infrastructure for distributed teams
+# Zero-Trust Remote Workforce Platform
 
-[![Live Demo](https://img.shields.io/badge/demo-live-success)](https://your-vercel-url.vercel.app)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.2-61dafb)](https://reactjs.org/)
+[ 
+graph TB
+    subgraph "Public Internet"
+        User[Remote Workers<br/>VAs/Paralegals]
+        Admin[Law Firm Admin]
+    end
+    
+    subgraph "AWS VPC - 10.0.0.0/16"
+        subgraph "Public Subnet - 10.0.1.0/24"
+            ALB[Application Load Balancer<br/>HTTPS:443]
+            Bastion[Bastion Host<br/>t3.micro]
+        end
+        
+        subgraph "Private Subnet - 10.0.2.0/24"
+            Dashboard[Admin Dashboard<br/>React + Node.js<br/>t3.micro]
+            Guacamole[Apache Guacamole<br/>Remote Desktop Gateway<br/>t3.micro]
+            Bitwarden[Bitwarden Vault<br/>Password Manager<br/>t3.micro]
+            Monitor[Prometheus + Grafana<br/>Monitoring Stack<br/>t3.micro]
+        end
+        
+        subgraph "Database Subnet - 10.0.3.0/24"
+            RDS[(PostgreSQL RDS<br/>db.t3.micro<br/>Free Tier)]
+        end
+    end
+    
+    subgraph "AWS Services"
+        Cognito[AWS Cognito<br/>MFA + SSO]
+        S3[S3 Bucket<br/>Logs + Backups]
+        Secrets[Secrets Manager<br/>Credentials]
+        CloudWatch[CloudWatch<br/>Alerting]
+    end
+    
+    User -->|HTTPS| ALB
+    Admin -->|HTTPS| ALB
+    ALB -->|TLS| Dashboard
+    ALB -->|TLS| Guacamole
+    Dashboard -->|Auth| Cognito
+    Guacamole -->|Auth| Cognito
+    Dashboard --> Bitwarden
+    Dashboard --> Monitor
+    Guacamole --> RDS
+    Bitwarden --> RDS
+    Monitor --> S3
+    Dashboard --> CloudWatch
+    Bastion -.->|SSH Tunnel<br/>Emergency Only| Dashboard
+    
+    style User fill:#4A90E2
+    style Admin fill:#E24A4A
+    style ALB fill:#FF9900
+    style Cognito fill:#FF9900
+    style RDS fill:#3B48CC
+    style S3 fill:#569A31
+  ]
 
-## í¾¯ Overview
+A full-stack cloud infrastructure and monitoring dashboard designed for secure, distributed team management. This project demonstrates the integration of **Infrastructure as Code (Terraform)** with a **High-Performance React Frontend** to manage AWS resources efficiently.
 
-A production-ready platform for managing remote teams securely, featuring:
+## ğŸš€ The Highlights
 
-- í¾¨ Modern glassmorphism UI with dark theme
-- í´’ Zero-trust security architecture
-- í³Š Real-time monitoring and analytics
-- âš¡ 60fps animations via Framer Motion
-- í²° Cost-optimized AWS infrastructure ($1.30/month)
-
-## íº€ Live Demo
-
-**Frontend:** [your-vercel-url.vercel.app](https://your-vercel-url.vercel.app)
-
-## í» ï¸ Tech Stack
-
-### Frontend
-- React 18.2 + TypeScript (strict mode)
-- Vite 5.0 (build tool)
-- Tailwind CSS 3.4 (custom theme)
-- Framer Motion 10.16 (animations)
-- Recharts 2.10 (data visualization)
-- Lucide React (icons)
-
-### Backend (AWS)
-- VPC with 3-tier architecture
-- EC2 Auto Scaling Groups
-- RDS PostgreSQL
-- Application Load Balancer
-- AWS Cognito (MFA/SSO)
-- CloudWatch (monitoring)
-
-### Infrastructure
-- Terraform (Infrastructure as Code)
-- AWS Free Tier optimized
-- CI/CD with GitHub Actions
-- Vercel deployment
-
-## í³ Project Structure
-```
-â”œâ”€â”€ frontend/              # React + TypeScript application
-â”‚   â”œâ”€â”€ src/
-â”‚   â”‚   â”œâ”€â”€ components/   # React components
-â”‚   â”‚   â”œâ”€â”€ hooks/        # Custom hooks
-â”‚   â”‚   â”œâ”€â”€ types/        # TypeScript types
-â”‚   â”‚   â””â”€â”€ utils/        # Helper functions
-â”‚   â””â”€â”€ package.json
-â”œâ”€â”€ terraform/            # AWS infrastructure
-â”‚   â”œâ”€â”€ modules/         # Reusable Terraform modules
-â”‚   â”‚   â”œâ”€â”€ vpc/
-â”‚   â”‚   â”œâ”€â”€ ec2/
-â”‚   â”‚   â”œâ”€â”€ rds/
-â”‚   â”‚   â””â”€â”€ cognito/
-â”‚   â””â”€â”€ environments/
-â”‚       â””â”€â”€ prod/
-â””â”€â”€ docs/                # Documentation
-```
-
-## í¿ƒ Quick Start
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open http://localhost:3000
-
-### Backend (AWS)
-```bash
-cd terraform/environments/prod
-terraform init
-terraform plan
-terraform apply
-```
-
-## í³Š Key Features
-
-- **Real-time Dashboard** - Live metrics and monitoring
-- **Security Events** - Audit log viewer with severity levels
-- **User Management** - Role-based access control
-- **Activity Tracking** - Session monitoring and time tracking
-- **Cost Optimization** - $1.30/month AWS infrastructure
-
-## í²° Cost Breakdown
-
-| Service | Monthly Cost |
-|---------|--------------|
-| EC2 (t3.micro) | $0.00 (Free Tier) |
-| RDS PostgreSQL | $0.00 (Free Tier) |
-| ALB | $0.50 |
-| Secrets Manager | $0.80 |
-| Frontend (Vercel) | $0.00 |
-| **Total** | **$1.30** |
-
-## í´’ Security Features
-
-- AWS Cognito MFA authentication
-- Zero-trust architecture
-- Private subnet isolation
-- Security group hardening
-- Encrypted data at rest (RDS)
-- TLS 1.2+ in transit
-
-## í³ˆ Performance
-
-- Lighthouse Score: 95+
-- Bundle Size: ~180kb (gzipped)
-- First Contentful Paint: <1.2s
-- Time to Interactive: <2.5s
-
-## í¾“ What I Learned
-
-- Advanced TypeScript patterns with strict mode
-- AWS infrastructure design and cost optimization
-- Terraform module architecture
-- React performance optimization
-- Glassmorphism UI design
-- CI/CD pipeline setup
-
-## í´œ Roadmap
-
-- [ ] WebSocket real-time updates
-- [ ] Multi-region deployment
-- [ ] Kubernetes migration (EKS)
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app (React Native)
-
-## í³„ License
-
-MIT
-
-## í´ Connect
-
-Built by [Your Name]
-
-- í²¼ [LinkedIn](https://linkedin.com/in/yourprofile)
-- í¼ [Portfolio](https://yourportfolio.com)
-- í³§ [Email](mailto:your.email@example.com)
+* **Infrastructure as Code:** 100% automated AWS provisioning using modular Terraform.
+* **Security First:** Implemented Zero-Trust principles via Private Subnets, Cognito MFA, and IAM least-privilege.
+* **Cost Efficiency:** Engineered specifically to run on the **AWS Free Tier**, costing only **$1.30/month** by leveraging Secrets Manager and a single Load Balancer.
+* **Modern UX:** Responsive glassmorphism dashboard built with TypeScript and Framer Motion.
 
 ---
 
-â­ Star this repo if you found it helpful!
+## ğŸ›  Tech Stack
+
+### Cloud & DevOps (AWS)
+
+* **Networking:** VPC with 3-tier architecture (Public/Private/Data subnets), NAT Gateways, and ALB.
+* **Compute:** EC2 Auto Scaling Groups (t3.micro) for high availability.
+* **Database:** RDS PostgreSQL with encrypted storage.
+* **Identity:** AWS Cognito for SSO and Multi-Factor Authentication.
+* **Tools:** Terraform, GitHub Actions (CI/CD), AWS Secrets Manager.
+
+### Frontend Engineering
+
+* **Core:** React 18.2 + TypeScript (Strict Mode).
+* **Styling:** Tailwind CSS + Framer Motion (60fps animations).
+* **Visualization:** Recharts for real-time telemetry display.
+
+---
+
+## ğŸ“ Architecture & Security
+
+This platform follows the **Well-Architected Framework**:
+
+1. **Isolation:** The database and application servers sit in private subnets, inaccessible from the public internet.
+2. **Encryption:** Data is encrypted at rest using AES-256 (RDS) and in transit via TLS 1.2.
+3. **Authentication:** Leverages AWS Cognito for secure token-based session management.
+
+---
+
+## ğŸ’° Budget Engineering
+
+One of the primary goals was to build a robust system without a massive bill.
+
+| Service | Monthly Cost | Optimization Strategy |
+| --- | --- | --- |
+| **EC2 / RDS** | $0.00 | Leveraged AWS 12-month Free Tier |
+| **ALB** | $0.50 | Shared Application Load Balancer |
+| **Secrets Manager** | $0.80 | Automated rotation of DB credentials |
+| **Frontend** | $0.00 | Static hosting via Vercel Edge |
+| **Total** | **$1.30** |  |
+
+---
+
+## ğŸ§  Engineering Challenges Overcome
+
+* **The "Unrelated Histories" Git Conflict:** Resolved complex repository merges during the initial cloud-to-local sync.
+* **RDS Character Constraints:** Debugged AWS API credential errors by implementing custom `random_password` logic in Terraform to filter out illegal characters.
+* **Strict Typing:** Achieved 100% TypeScript coverage to eliminate runtime errors in the telemetry dashboard.
+
+---
+
+## ğŸ“‚ Project Structure
+
+```bash
+â”œâ”€â”€ terraform/          # Modular IaC
+â”‚   â”œâ”€â”€ modules/        # Reusable components (VPC, RDS, EC2)
+â”‚   â””â”€â”€ environments/   # Environment-specific configs (Prod)
+â”œâ”€â”€ frontend/           # React + TypeScript App
+â”‚   â”œâ”€â”€ src/components/ # Recharts & UI logic
+â”‚   â””â”€â”€ src/hooks/      # Custom AWS data fetching hooks
+â””â”€â”€ docs/               # System diagrams & Architecture notes
+
+```
+
+---
+
+## ğŸ› ï¸ Local Setup
+
+1. **Infrastructure:**
+```bash
+cd terraform/environments/prod
+terraform init && terraform apply
+
+```
+
+
+2. **Frontend:**
+```bash
+cd frontend
+npm install && npm run dev
+
+```
+
+
+
+---
+
+## ğŸ¤ Connect
+
+**[Your Name]** - Cloud & Full-Stack Engineer
+
+[LinkedIn](https://linkedin.com/in/yourprofile) | [Portfolio](https://yourportfolio.com)
+
+---
+
+### Pro-Tip for your Readme:
+
+**Replace the placeholder `[Image of...]` tags** with actual screenshots of your dashboard or your AWS Architecture diagram. Recruiters love seeing a visual representation of the VPC before they dive into the code.
+
+**Would you like me to help you write a "Technical Summary" for your LinkedIn profile that matches this project?**
