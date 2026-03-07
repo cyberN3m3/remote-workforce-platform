@@ -1,0 +1,62 @@
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/*.tfplan
+**/crash.log
+**/.terraformrc
+**/terraform.rc
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files (CRITICAL - NEVER COMMIT SECRETS!)
+.env
+.env.local
+.env.*.local
+**/.env
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+.code-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# AWS
+**/*.pem
+**/*.key
+
+# Backups
+backups/
+*.backup
+
+# Vercel
+.vercel
+
+# Temporary files
+tmp/
+temp/
+*.tmp
