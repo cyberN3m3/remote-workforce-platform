@@ -21,7 +21,7 @@ import { formatPercentage } from '@/utils'
 function App() {
   const {
     activeUsers,
-    totalSessions,
+    
     securityScore,
     systemUptime,
     activityData,

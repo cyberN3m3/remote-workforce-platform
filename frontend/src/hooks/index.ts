@@ -9,7 +9,7 @@ export const useRealtimeData = () => {
   const [activeUsers, setActiveUsers] = useState(47)
   const [totalSessions, setTotalSessions] = useState(1234)
   const [securityScore, setSecurityScore] = useState(98.5)
-  const [systemUptime, setSystemUptime] = useState(99.94)
+  const [systemUptime] = useState(99.94)
   const [activityData, setActivityData] = useState<ActivityDataPoint[]>(generateActivityData())
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>(generateSecurityEvents())
 
