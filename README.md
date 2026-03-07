@@ -1,7 +1,7 @@
 
 # Zero-Trust Remote Workforce Platform
 
-[ 
+```mermaid
 graph TB
     subgraph "Public Internet"
         User[Remote Workers<br/>VAs/Paralegals]
@@ -53,7 +53,7 @@ graph TB
     style Cognito fill:#FF9900
     style RDS fill:#3B48CC
     style S3 fill:#569A31
-  ]
+```
 
 A full-stack cloud infrastructure and monitoring dashboard designed for secure, distributed team management. This project demonstrates the integration of **Infrastructure as Code (Terraform)** with a **High-Performance React Frontend** to manage AWS resources efficiently.
 
