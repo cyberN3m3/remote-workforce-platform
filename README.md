@@ -1,5 +1,5 @@
 
-```markdown
+
 #  Zero-Trust Remote Workforce Platform
 
 > Enterprise-grade remote access dashboard with React + TypeScript and AWS infrastructure managed via Terraform
