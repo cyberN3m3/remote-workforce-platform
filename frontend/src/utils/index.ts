@@ -2,17 +2,24 @@ import { ActivityDataPoint, SecurityEvent } from '@/types'
 
 /**
  * Generates mock activity data for the last 24 hours
+ * Fixes TS2322: Now provides both 'hour' and 'time' to match ActivityDataPoint interface
  */
 export const generateActivityData = (): ActivityDataPoint[] => {
   const now = Date.now()
-  return Array.from({ length: 24 }, (_, i) => ({
-    time: new Date(now - (23 - i) * 3600000).toLocaleTimeString('en-US', {
+  return Array.from({ length: 24 }, (_, i) => {
+    const timeString = new Date(now - (23 - i) * 3600000).toLocaleTimeString('en-US', {
       hour: '2-digit',
       hour12: false,
-    }),
-    users: Math.floor(Math.random() * 30) + 15,
-    sessions: Math.floor(Math.random() * 45) + 20,
-  }))
+    });
+
+    return {
+      // Satisfies the interface requiring both properties
+      hour: timeString, 
+      time: timeString, 
+      users: Math.floor(Math.random() * 30) + 15,
+      sessions: Math.floor(Math.random() * 45) + 20,
+    };
+  });
 }
 
 /**
@@ -32,7 +39,7 @@ export const generateSecurityEvents = (): SecurityEvent[] => {
   const severities: Array<'low' | 'medium' | 'high'> = ['low', 'medium', 'high']
 
   return Array.from({ length: 10 }, (_, i) => ({
-     id: `evt-${Date.now()}-${i}`,
+    id: `evt-${Date.now()}-${i}`,
     event: events[Math.floor(Math.random() * events.length)] ?? 'Unknown Event',
     user: `employee${Math.floor(Math.random() * 20) + 1}@lawfirm.com`,
     timestamp: new Date(Date.now() - Math.random() * 3600000 * 24).toISOString(),
