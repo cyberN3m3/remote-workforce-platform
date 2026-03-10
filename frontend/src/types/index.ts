@@ -1,3 +1,5 @@
+import { ReactNode } from "react"
+
 export interface User {
   id: string
   email: string
@@ -8,6 +10,7 @@ export interface User {
 }
 
 export interface ActivityDataPoint {
+  hour: ReactNode
   time: string
   users: number
   sessions: number
