@@ -67,12 +67,15 @@ graph TB
 ## 🛠️ Tech Stack
 
 ### Frontend (Deployed)
-- **React 18.2** + **TypeScript 5.3** (strict mode)
-- **Vite 5.0** (build tool)
-- **Tailwind CSS 3.4** (custom cyan/teal theme)
-- **Framer Motion 10.16** (60fps animations)
-- **Recharts 2.10** (data visualization)
-- **Lucide React** (icon system)
+- **KPI Metrics Grid**: Real-time display of active users, security score, system uptime, and critical events with trend indicators
+- **Tab Navigation**: Clean interface switching between Overview, Security, and Activity views
+- **Custom Data Visualization**: Lightweight bar chart for 24-hour activity patterns (no heavy charting libraries)
+- **Security Events Feed**: Real-time event log with color-coded severity indicators (red/amber/green) and timestamp tracking
+- **System Health Monitor**: Live status display for API Gateway, Database, Auth Service, and Worker processes
+- **Responsive Layout**: Desktop-first grid system with mobile breakpoints for tablet and phone viewing
+- **Dark Mode Support**: Professional slate palette with proper contrast ratios for both light and dark themes
+- **Minimal Interactions**: Subtle hover states and transitions for professional aesthetic
+- **Clean Typography**: Inter font system for readability with JetBrains Mono for monospace data
 
 ### Backend Infrastructure (Terraform)
 - **AWS VPC** (3-tier architecture)
