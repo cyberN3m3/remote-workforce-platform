@@ -10,7 +10,6 @@
 
 A production-ready remote workforce management platform featuring:
 
-- 🎨 **Modern UI**: Glassmorphism dark theme with 60fps animations
 - 🏗️ **AWS Infrastructure**: VPC, EC2, RDS, ALB, Cognito managed via Terraform
 - ⚡ **Real-time Monitoring**: Live dashboard with security event tracking
 - 💰 **Cost-Optimized**: Designed for $1.30/month AWS deployment
