@@ -16,7 +16,7 @@ A production-ready remote workforce management platform featuring:
 - 💰 **Cost-Optimized**: Designed for $1.30/month AWS deployment
 - 🚀 **CI/CD Pipeline**: Automated builds and deployments
 
-**Live Demo:** [remote-workforce-platform.vercel.app](https://remote-workforce-platform-gusstrnid.vercel.app/)
+**Live Demo:** [remote-workforce-platform.vercel.app](https://remote-workforce-platform.vercel.app/)
 
 ---
 
