@@ -8,11 +8,11 @@
 
 ##  Project Overview
 
-A production-ready remote workforce management platform featuring:
+A portfolio project: a remote workforce dashboard on a 3-tier AWS architecture, featuring:
 
 - 🏗️ **AWS Infrastructure**: VPC, EC2, RDS, ALB, Cognito managed via Terraform
 - ⚡ **Real-time Monitoring**: Live dashboard with security event tracking
-- 💰 **Cost-Optimized**: Designed for $1.30/month AWS deployment
+- 💰 **Cost-aware**: one shared NAT Gateway and one ALB instead of one per AZ or service
 - 🚀 **CI/CD Pipeline**: Automated builds and deployments
 
 **Live Demo:** [remote-workforce-platform.vercel.app](https://remote-workforce-platform.vercel.app/)
@@ -29,7 +29,7 @@ graph TB
     
     subgraph "AWS Cloud Infrastructure"
         subgraph "Public Tier"
-            ALB[Application Load Balancer<br/>HTTPS + Auto-scaling]
+            ALB[Application Load Balancer<br/>HTTPS (ACM, TLS 1.2)]
         end
         
         subgraph "Private Tier"
@@ -88,7 +88,7 @@ graph TB
 
 ### DevOps
 - **Terraform 1.6** (Infrastructure as Code)
-- **GitHub Actions** (CI/CD)
+- **Vercel Git integration** (frontend builds and deploys on every push)
 - **Vercel** (edge deployment)
 - **AWS CLI** (resource management)
 
@@ -96,20 +96,15 @@ graph TB
 
 ## 💰 Cost Optimization Strategy
 
-| Component | Monthly Cost | Strategy |
-|-----------|--------------|----------|
-| Frontend (Vercel) | **$0.00** | Edge CDN, unlimited bandwidth |
-| EC2 (4× t3.micro) | **$0.00** | AWS Free Tier (12 months) |
-| RDS PostgreSQL | **$0.00** | AWS Free Tier (750 hrs/month) |
-| Application Load Balancer | **$0.50** | Single ALB with path-based routing |
-| Secrets Manager (2 secrets) | **$0.80** | Automated rotation enabled |
-| VPC, S3, CloudWatch | **$0.00** | Free tier limits not exceeded |
-| **Total** | **$1.30/month** | **93% under $20 budget** |
+| Component | Cost driver | Choice made |
+|-----------|-------------|-------------|
+| Frontend (Vercel) | Free hobby tier | Static React build on Vercel's edge network |
+| NAT Gateway | ~$32/month + data, the biggest cost | **One** NAT Gateway shared by both private subnets instead of one per AZ (saves ~$32/month; trade-off: private-subnet internet access depends on one AZ) |
+| Application Load Balancer | Hourly + capacity units | **One** ALB with path-based routing for every service |
+| EC2 (t3.micro) and RDS (db.t3.micro) | Instance hours | Free Tier instance sizes; single-AZ RDS |
+| Secrets Manager | $0.40 per secret per month | Only the database credentials |
 
-**Key Cost Savings:**
-- ✅ No NAT Gateway (saves $32/month) - used public subnets with strict security groups
-- ✅ Single ALB for all services (saves $15/month) - host-based routing
-- ✅ Free tier maximization - right-sized instances
+Destroy the stack after a demo (`terraform destroy`) to stop the hourly charges.
 
 ---
 
@@ -126,8 +121,8 @@ graph TB
 ### AWS Infrastructure
 - **3-Tier VPC Architecture**: Public, private, and database subnets across 2 AZs
 - **Security Hardening**: Security groups with least-privilege rules
-- **Auto Scaling**: Dynamic EC2 scaling based on CPU utilization
-- **High Availability**: Multi-AZ deployment for RDS and ALB
+- **Auto Scaling group**: keeps the desired number of healthy API instances and replaces failed ones
+- **Availability**: ALB and API instances span two Availability Zones; RDS is single-AZ to stay in the Free Tier (`multi_az = true` turns on failover)
 - **Encrypted Storage**: RDS encryption at rest, TLS 1.2 in transit
 - **IAM Best Practices**: Instance profiles, no hardcoded credentials
 
@@ -223,9 +218,9 @@ terraform/
 
 ## 🔒 Security Features
 
-- ✅ **Zero-Trust Architecture**: All resources in private subnets by default
-- ✅ **AWS Cognito MFA**: Multi-factor authentication on all user accounts
-- ✅ **Secrets Manager**: No hardcoded credentials, automated rotation
+- ✅ **Zero-trust networking**: API servers and the database sit in private subnets; only the ALB is public
+- ✅ **AWS Cognito**: user sign-in with optional TOTP multi-factor authentication
+- ✅ **Secrets Manager**: database credentials stored outside the code
 - ✅ **Security Groups**: Principle of least privilege, port-specific rules
 - ✅ **TLS 1.2+**: End-to-end encryption in transit
 - ✅ **RDS Encryption**: AES-256 encryption at rest
@@ -239,7 +234,7 @@ terraform/
 - AWS infrastructure design with VPC best practices
 - Terraform module architecture and state management
 - React performance optimization (code splitting, lazy loading)
-- CI/CD pipeline design with GitHub Actions and Vercel
+- Frontend CI/CD with Vercel
 - Cost optimization strategies for cloud infrastructure
 - Debugging distributed systems (EC2, ALB, RDS connectivity)
 - Glassmorphism UI design with Tailwind CSS
@@ -258,8 +253,8 @@ MIT License - feel free to use this code for your own projects
 **Anyasi Chineme** – Cloud & DevOps Engineer
 
 - 💼 [LinkedIn](https://linkedin.com/in/anyasichineme)
-- 🌐 [Portfolio]()
-- 📧 [Email](anyasichineme.p@gmail.com)
+- 🌐 [Portfolio](http://www.anyasichineme.com/)
+- 📧 [Email](mailto:Anyasiprecious5@gmail.com)
 - 💻 [GitHub](https://github.com/cyberN3m3)
 
 ---
